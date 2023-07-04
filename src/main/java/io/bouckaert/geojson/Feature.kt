@@ -14,26 +14,26 @@ class Feature @OptIn(ExperimentalSerializationApi::class) constructor(
     @EncodeDefault(EncodeDefault.Mode.ALWAYS)
     val geometry: Geometry? = null,
     @EncodeDefault(EncodeDefault.Mode.ALWAYS)
-    val properties: Map<String, JsonElement> = emptyMap() // TODO: This was any
-) : GeoJSON() {
+    val properties: Map<String, JsonElement>? = null // TODO: This was any
+) : FeatureCollection.Feature() {
     constructor(
         geometry: Geometry?,
-        properties: Map<String, Any> = emptyMap()
+        properties: Map<String, Any>? = null
     ) : this(null, geometry, mapProperties(properties))
     constructor(
         id: String,
         geometry: Geometry?,
-        properties: Map<String, Any> = emptyMap()
+        properties: Map<String, Any>? = null
     ) : this(JsonPrimitive(id), geometry, mapProperties(properties))
     constructor(
         id: Number,
         geometry: Geometry?,
-        properties: Map<String, Any> = emptyMap()
+        properties: Map<String, Any>? = null
     ) : this(JsonPrimitive(id), geometry, mapProperties(properties))
 
     companion object {
         @JvmStatic
-        fun mapProperties(properties: Map<String, Any>): Map<String, JsonElement> = properties.mapValues { entry ->
+        fun mapProperties(properties: Map<String, Any>?): Map<String, JsonElement>? = properties?.mapValues { entry ->
             when (val value = entry.value) {
                 is Boolean -> JsonPrimitive(value)
                 is Number -> JsonPrimitive(value)

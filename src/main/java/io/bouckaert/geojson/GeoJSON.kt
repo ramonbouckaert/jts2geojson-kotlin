@@ -2,8 +2,11 @@ package io.bouckaert.geojson
 
 import kotlinx.serialization.*
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonClassDiscriminator
 
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
+@JsonClassDiscriminator("type")
 sealed class GeoJSON {
     companion object {
         @OptIn(ExperimentalSerializationApi::class)
@@ -14,8 +17,5 @@ sealed class GeoJSON {
 
         fun create(input: String): GeoJSON = JSON.decodeFromString(input)
     }
-
-    @Required
-    val injectType: String = javaClass.simpleName
-    override fun toString(): String = JSON.encodeToString(this)
+    override fun toString(): String = JSON.encodeToString<GeoJSON>(this)
 }
