@@ -10,11 +10,11 @@ import kotlinx.serialization.json.JsonPrimitive
 @Serializable
 @SerialName("Feature")
 class Feature @OptIn(ExperimentalSerializationApi::class) constructor(
-    val id: JsonPrimitive? = null, // TODO: This was any
+    val id: JsonPrimitive? = null,
     @EncodeDefault(EncodeDefault.Mode.ALWAYS)
     val geometry: Geometry? = null,
     @EncodeDefault(EncodeDefault.Mode.ALWAYS)
-    val properties: Map<String, JsonElement>? = null // TODO: This was any
+    val properties: Map<String, JsonElement>? = null
 ) : FeatureCollection.Feature() {
     constructor(
         geometry: Geometry?,
