@@ -1,46 +1,46 @@
-package org.wololo.geojson;
+package io.bouckaert.geojson
 
-import java.util.Map;
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonPrimitive
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
+@Serializable
+@SerialName("Feature")
+class Feature @OptIn(ExperimentalSerializationApi::class) constructor(
+    val id: JsonPrimitive? = null, // TODO: This was any
+    @EncodeDefault(EncodeDefault.Mode.ALWAYS)
+    val geometry: Geometry? = null,
+    @EncodeDefault(EncodeDefault.Mode.ALWAYS)
+    val properties: Map<String, JsonElement> = emptyMap() // TODO: This was any
+) : GeoJSON() {
+    constructor(
+        geometry: Geometry?,
+        properties: Map<String, Any> = emptyMap()
+    ) : this(null, geometry, mapProperties(properties))
+    constructor(
+        id: String,
+        geometry: Geometry?,
+        properties: Map<String, Any> = emptyMap()
+    ) : this(JsonPrimitive(id), geometry, mapProperties(properties))
+    constructor(
+        id: Number,
+        geometry: Geometry?,
+        properties: Map<String, Any> = emptyMap()
+    ) : this(JsonPrimitive(id), geometry, mapProperties(properties))
 
-@JsonPropertyOrder({"type", "id", "geometry", "properties"})
-public class Feature extends GeoJSON {
-    @JsonInclude(Include.NON_EMPTY)
-    private final Object id;
-    private final Geometry geometry;
-    private final Map<String, Object> properties;
-
-    public Feature(
-            @JsonProperty("geometry") Geometry geometry,
-            @JsonProperty("properties") Map<String,Object> properties) {
-        this(null, geometry, properties);
-    }
-
-    @JsonCreator
-    public Feature(
-            @JsonProperty("id") Object id,
-            @JsonProperty("geometry") Geometry geometry,
-            @JsonProperty("properties") Map<String,Object> properties) {
-        super();
-        this.id = id;
-        this.geometry = geometry;
-        this.properties = properties;
-    }
-
-    public Object getId() {
-        return id;
-    }
-
-    public Geometry getGeometry() {
-        return geometry;
-    }
-
-    public Map<String, Object> getProperties() {
-        return properties;
+    companion object {
+        @JvmStatic
+        fun mapProperties(properties: Map<String, Any>): Map<String, JsonElement> = properties.mapValues { entry ->
+            when (val value = entry.value) {
+                is Boolean -> JsonPrimitive(value)
+                is Number -> JsonPrimitive(value)
+                is String -> JsonPrimitive(value)
+                is Map<*, *>, is Iterable<*> -> throw NotImplementedError()
+                else -> throw UnsupportedOperationException()
+            }
+        }
     }
 }

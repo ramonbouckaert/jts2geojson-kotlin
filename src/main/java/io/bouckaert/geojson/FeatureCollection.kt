@@ -1,20 +1,10 @@
-package org.wololo.geojson;
+package io.bouckaert.geojson
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
-@JsonPropertyOrder({"type", "features"})
-public class FeatureCollection extends GeoJSON {
-    private final Feature[] features;
-
-    @JsonCreator
-    public FeatureCollection(@JsonProperty("features") Feature[] features) {
-        super();
-        this.features = features;
-    }
-
-    public Feature[] getFeatures() {
-        return features;
-    }
-}
+@Serializable
+@SerialName("FeatureCollection")
+class FeatureCollection (
+    val features: List<Feature>
+): GeoJSON()

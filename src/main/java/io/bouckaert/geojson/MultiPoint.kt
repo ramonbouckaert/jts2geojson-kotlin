@@ -1,27 +1,12 @@
-package org.wololo.geojson;
+package io.bouckaert.geojson
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
-@JsonInclude(Include.NON_NULL)
-public class MultiPoint extends Geometry {
-    private final double[][] coordinates;
-    private final double[] bbox;
-
-    @JsonCreator
-    public MultiPoint(@JsonProperty("coordinates") double [][] coordinates) {
-        super();
-        this.coordinates = coordinates;
-        this.bbox = null;
-    }
-
-    public double[][] getCoordinates() {
-        return coordinates;
-    }
-
-    public double[] getBbox() {
-        return bbox;
-    }
+@Serializable
+@SerialName("MultiPoint")
+class MultiPoint(
+    val coordinates: List<DoubleArray>
+): Geometry() {
+    val bbox: DoubleArray? = null
 }

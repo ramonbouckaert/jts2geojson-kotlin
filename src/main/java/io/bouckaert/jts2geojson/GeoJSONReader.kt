@@ -1,113 +1,74 @@
-package org.wololo.jts2geojson;
+package io.bouckaert.jts2geojson
 
-import org.wololo.geojson.*;
+import io.bouckaert.geojson.*
+import org.locationtech.jts.geom.Coordinate
+import org.locationtech.jts.geom.Geometry
+import org.locationtech.jts.geom.GeometryFactory
+import org.locationtech.jts.geom.PrecisionModel
 
-import org.locationtech.jts.geom.Coordinate;
-import org.locationtech.jts.geom.Geometry;
-import org.locationtech.jts.geom.GeometryFactory;
-import org.locationtech.jts.geom.LinearRing;
-import org.locationtech.jts.geom.PrecisionModel;
-
-public class GeoJSONReader {
-    final static GeometryFactory FACTORY = new GeometryFactory(
-            new PrecisionModel(PrecisionModel.FLOATING));
-
-    public Geometry read(String json) {
-        return read(json, null);
+object GeoJSONReader {
+    @JvmOverloads
+    fun read(json: String, geomFactory: GeometryFactory? = null): Geometry {
+        return read(GeoJSON.create(json), geomFactory)
     }
 
-    public Geometry read(String json, GeometryFactory geomFactory) {
-        return read(GeoJSONFactory.create(json), geomFactory);
-    }
-
-    public Geometry read(GeoJSON geoJSON) {
-        return read(geoJSON, null);
-    }
-
-    public Geometry read(GeoJSON geoJSON, GeometryFactory geomFactory) {
-        var factory = geomFactory != null ? geomFactory : FACTORY;
-        if (geoJSON instanceof Point)
-            return convert((Point) geoJSON, factory);
-        else if (geoJSON instanceof LineString)
-            return convert((LineString) geoJSON, factory);
-        else if (geoJSON instanceof Polygon)
-            return convert((Polygon) geoJSON, factory);
-        else if (geoJSON instanceof MultiPoint)
-            return convert((MultiPoint) geoJSON, factory);
-        else if (geoJSON instanceof MultiLineString)
-            return convert((MultiLineString) geoJSON, factory);
-        else if (geoJSON instanceof MultiPolygon)
-            return convert((MultiPolygon) geoJSON, factory);
-        else if (geoJSON instanceof GeometryCollection)
-            return convert((GeometryCollection) geoJSON, factory);
-        else
-            throw new UnsupportedOperationException();
-    }
-
-    Geometry convert(Point point, GeometryFactory factory) {
-        return factory.createPoint(convert(point.getCoordinates()));
-    }
-
-    Geometry convert(MultiPoint multiPoint, GeometryFactory factory) {
-        return factory.createMultiPointFromCoords(convert(multiPoint.getCoordinates()));
-    }
-
-    Geometry convert(LineString lineString, GeometryFactory factory) {
-        return factory.createLineString(convert(lineString.getCoordinates()));
-    }
-
-    Geometry convert(MultiLineString multiLineString, GeometryFactory factory) {
-        var size = multiLineString.getCoordinates().length;
-        var lineStrings = new org.locationtech.jts.geom.LineString[size];
-        for (int i = 0; i < size; i++)
-            lineStrings[i] = factory.createLineString(convert(multiLineString.getCoordinates()[i]));
-        return factory.createMultiLineString(lineStrings);
-    }
-
-    Geometry convert(Polygon polygon, GeometryFactory factory) {
-        return convertToPolygon(polygon.getCoordinates(), factory);
-    }
-
-    org.locationtech.jts.geom.Polygon convertToPolygon(double[][][] coordinates, GeometryFactory factory) {
-        var shell = factory.createLinearRing(convert(coordinates[0]));
-        if (coordinates.length > 1) {
-            var size = coordinates.length - 1;
-            var holes = new LinearRing[size];
-            for (var i = 0; i < size; i++)
-                holes[i] = factory.createLinearRing(convert(coordinates[i + 1]));
-            return factory.createPolygon(shell, holes);
-        } else {
-            return factory.createPolygon(shell);
+    @JvmOverloads
+    fun read(geoJSON: GeoJSON, geomFactory: GeometryFactory? = null): Geometry {
+        val factory = geomFactory ?: FACTORY
+        return when (geoJSON) {
+            is Point -> convert(geoJSON, factory)
+            is LineString -> convert(geoJSON, factory)
+            is Polygon -> convert(geoJSON, factory)
+            is MultiPoint -> convert(geoJSON, factory)
+            is MultiLineString -> convert(geoJSON, factory)
+            is MultiPolygon -> convert(geoJSON, factory)
+            is GeometryCollection -> convert(geoJSON, factory)
+            else -> throw UnsupportedOperationException()
         }
     }
 
-    Geometry convert(MultiPolygon multiPolygon, GeometryFactory factory) {
-        var size = multiPolygon.getCoordinates().length;
-        var polygons = new org.locationtech.jts.geom.Polygon[size];
-        for (int i = 0; i < size; i++)
-            polygons[i] = convertToPolygon(multiPolygon.getCoordinates()[i], factory);
-        return factory.createMultiPolygon(polygons);
+    private fun convert(point: Point, factory: GeometryFactory): Geometry =
+        factory.createPoint(convert(point.coordinates))
+
+    private fun convert(multiPoint: MultiPoint, factory: GeometryFactory): Geometry =
+        factory.createMultiPointFromCoords(convert(multiPoint.coordinates).toTypedArray())
+
+    private fun convert(lineString: LineString, factory: GeometryFactory): Geometry =
+        factory.createLineString(convert(lineString.coordinates).toTypedArray())
+
+    private fun convert(multiLineString: MultiLineString, factory: GeometryFactory): Geometry =
+        factory.createMultiLineString(multiLineString.coordinates.map { factory.createLineString(convert(it).toTypedArray()) }.toTypedArray())
+
+    private fun convert(polygon: Polygon, factory: GeometryFactory): Geometry =
+        convertToPolygon(polygon.coordinates, factory)
+
+    private fun convertToPolygon(
+        coordinates: List<List<DoubleArray>>,
+        factory: GeometryFactory
+    ): org.locationtech.jts.geom.Polygon {
+        val linearRings = coordinates.map { factory.createLinearRing(convert(it).toTypedArray()) }
+
+        return if (linearRings.size > 1) {
+            factory.createPolygon(linearRings.first(), linearRings.take(linearRings.size - 1).toTypedArray())
+        } else {
+            factory.createPolygon(linearRings.first())
+        }
     }
 
-    Geometry convert(GeometryCollection gc, GeometryFactory factory) {
-        var size = gc.getGeometries().length;
-        var geometries = new org.locationtech.jts.geom.Geometry[size];
-        for (var i = 0; i < size; i++)
-            geometries[i] = read(gc.getGeometries()[i], factory);
-        return factory.createGeometryCollection(geometries);
-    }
+    private fun convert(multiPolygon: MultiPolygon, factory: GeometryFactory): Geometry =
+        factory.createMultiPolygon(multiPolygon.coordinates.map { convertToPolygon(it, factory) }.toTypedArray())
 
-    Coordinate convert(double[] c) {
-        if (c.length == 2)
-            return new Coordinate(c[0], c[1]);
-        else
-            return new Coordinate(c[0], c[1], c[2]);
-    }
+    private fun convert(gc: GeometryCollection, factory: GeometryFactory): Geometry =
+        factory.createGeometryCollection(gc.geometries.map { read(it, factory) }.toTypedArray())
 
-    Coordinate[] convert(double[][] ca) {
-        var coordinates = new Coordinate[ca.length];
-        for (int i = 0; i < ca.length; i++)
-            coordinates[i] = convert(ca[i]);
-        return coordinates;
-    }
+    private fun convert(c: DoubleArray): Coordinate =
+        when (c.size) {
+            2 -> Coordinate(c[0], c[1])
+            3 -> Coordinate(c[0], c[1], c[2])
+            else -> throw UnsupportedOperationException()
+        }
+
+    private fun convert(ca: List<DoubleArray>): List<Coordinate> = ca.map { convert(it) }
+
+    private val FACTORY = GeometryFactory(PrecisionModel(PrecisionModel.FLOATING))
 }
