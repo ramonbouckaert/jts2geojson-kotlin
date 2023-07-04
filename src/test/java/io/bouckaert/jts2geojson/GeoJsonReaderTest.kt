@@ -51,7 +51,6 @@ class GeoJsonReaderTest {
     @Test
     fun `reading XYZ JTS object from GeoJSON`() {
         val reader = GeoJSONReader
-        val writer = GeoJSONWriter
         val factory = GeometryFactory()
         val srid = 25832
         val factorySrid = GeometryFactory(PrecisionModel(), srid)
