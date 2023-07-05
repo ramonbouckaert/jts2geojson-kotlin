@@ -35,7 +35,7 @@ publishing {
             url = uri("https://maven.pkg.github.com/ramonbouckaert/jts2geojson-kotlin")
             credentials {
                 username = project.findProperty("gpr.user") as String? ?: System.getenv("USERNAME")
-                password = project.findProperty("gpr.key") as String? ?: System.getenv("PASSWORD")
+                password = project.findProperty("gpr.key") as String? ?: System.getenv("TOKEN")
             }
         }
     }
