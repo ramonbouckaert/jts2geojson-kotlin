@@ -1,6 +1,7 @@
 plugins {
     kotlin("jvm") version "1.8.22"
     kotlin("plugin.serialization") version "1.8.22"
+    id("maven-publish")
 }
 
 repositories {
@@ -25,4 +26,22 @@ description = "jts2geojson-kotlin"
 
 kotlin {
     jvmToolchain(17)
+}
+
+publishing {
+    repositories {
+        maven {
+            name = "GitHubPackages"
+            url = uri("https://maven.pkg.github.com/ramonbouckaert/jts2geojson-kotlin")
+            credentials {
+                username = project.findProperty("gpr.user") as String? ?: System.getenv("USERNAME")
+                password = project.findProperty("gpr.key") as String? ?: System.getenv("PASSWORD")
+            }
+        }
+    }
+    publications {
+        register<MavenPublication>("gpr") {
+            from(components["java"])
+        }
+    }
 }
