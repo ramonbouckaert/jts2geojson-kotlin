@@ -2,6 +2,24 @@ This is a fork from [bjornharrtell/jts2geojson](https://github.com/bjornharrtell
 
 This Kotlin library can convert JTS geometries to GeoJSON and back. Its API is similar to other io.* classes in JTS.
 
+## Dependency
+(Requires GitHub PAT for this repo)
+
+Maven:
+```xml
+<dependency>
+  <groupId>io.bouckaert</groupId>
+  <artifactId>jts2geojson-kotlin</artifactId>
+  <version>0.19.0</version>
+</dependency>
+```
+Gradle:
+```kotlin
+dependencies {
+    implementation("io.bouckaert:jts2geojson-kotlin:0.19.0")
+}
+```
+
 ## Usage
 
 ```kotlin
