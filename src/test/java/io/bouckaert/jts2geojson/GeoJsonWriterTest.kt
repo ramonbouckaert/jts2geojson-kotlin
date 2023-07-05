@@ -1,9 +1,6 @@
 package io.bouckaert.jts2geojson
 
-import io.bouckaert.geojson.Feature
-import io.bouckaert.geojson.FeatureCollection
 import io.bouckaert.geojson.GeoJSON
-import io.bouckaert.geojson.Geometry
 import org.junit.Test
 import org.locationtech.jts.geom.Coordinate
 import org.locationtech.jts.geom.GeometryFactory
@@ -75,11 +72,26 @@ class GeoJsonWriterTest {
             writer.write(multiPolygon).toString()
         )
 
-        // Expected result for FeatureCollection
-        val featureCollection = FeatureCollection(listOf(Feature(expectedPointJson as Geometry), Feature(expectedPointJson)))
+        // Expected result for Feature
+        val feature = factory.createMultiPolygon(arrayOf(polygon, polygon))
+        feature.userData = JtsFeatureMetadata("123", mapOf("a" to "1", "b" to 2))
         assertEquals(
-            """{"type":"FeatureCollection","features":[{"type":"Feature","geometry":{"type":"Point","coordinates":[1.0,1.0]},"properties":null},{"type":"Feature","geometry":{"type":"Point","coordinates":[1.0,1.0]},"properties":null}]}""",
-            featureCollection.toString()
+            """{"type":"Feature","id":"123","geometry":{"type":"MultiPolygon","coordinates":[[[[1.0,1.0],[1.0,2.0],[2.0,2.0],[1.0,1.0]]],[[[1.0,1.0],[1.0,2.0],[2.0,2.0],[1.0,1.0]]]]},"properties":{"a":"1","b":2}}""",
+            writer.write(feature).toString()
+        )
+
+        // Expected result for FeatureCollection
+        val featureCollection = factory.createGeometryCollection(arrayOf(feature, feature))
+        assertEquals(
+            """{"type":"FeatureCollection","features":[{"type":"Feature","id":"123","geometry":{"type":"MultiPolygon","coordinates":[[[[1.0,1.0],[1.0,2.0],[2.0,2.0],[1.0,1.0]]],[[[1.0,1.0],[1.0,2.0],[2.0,2.0],[1.0,1.0]]]]},"properties":{"a":"1","b":2}},{"type":"Feature","id":"123","geometry":{"type":"MultiPolygon","coordinates":[[[[1.0,1.0],[1.0,2.0],[2.0,2.0],[1.0,1.0]]],[[[1.0,1.0],[1.0,2.0],[2.0,2.0],[1.0,1.0]]]]},"properties":{"a":"1","b":2}}]}""",
+            writer.write(featureCollection).toString()
+        )
+
+        // Expected result for GeometryCollection
+        val geometryCollection = factory.createGeometryCollection(arrayOf(polygon, polygon))
+        assertEquals(
+            """{"type":"GeometryCollection","geometries":[{"type":"Polygon","coordinates":[[[1.0,1.0],[1.0,2.0],[2.0,2.0],[1.0,1.0]]]},{"type":"Polygon","coordinates":[[[1.0,1.0],[1.0,2.0],[2.0,2.0],[1.0,1.0]]]}]}""",
+            writer.write(geometryCollection).toString()
         )
     }
 
@@ -148,11 +160,48 @@ class GeoJsonWriterTest {
             writer.write(multiPolygon).toString()
         )
 
-        // Expected result for FeatureCollection
-        val featureCollection = FeatureCollection(listOf(Feature(expectedPointJson as Geometry), Feature(expectedPointJson)))
+        // Expected result for Feature
+        val feature = factory.createMultiPolygon(arrayOf(polygon, polygon))
+        feature.userData = JtsFeatureMetadata("123", mapOf("a" to "1", "b" to 2))
         assertEquals(
-            """{"type":"FeatureCollection","features":[{"type":"Feature","geometry":{"type":"Point","coordinates":[1.0,1.0,1.0]},"properties":null},{"type":"Feature","geometry":{"type":"Point","coordinates":[1.0,1.0,1.0]},"properties":null}]}""",
-            featureCollection.toString()
+            """{"type":"Feature","id":"123","geometry":{"type":"MultiPolygon","coordinates":[[[[1.0,1.0,1.0],[1.0,2.0,1.0],[2.0,2.0,2.0],[1.0,1.0,1.0]]],[[[1.0,1.0,1.0],[1.0,2.0,1.0],[2.0,2.0,2.0],[1.0,1.0,1.0]]]]},"properties":{"a":"1","b":2}}""",
+            writer.write(feature).toString()
+        )
+
+        // Expected result for FeatureCollection
+        val featureCollection = factory.createGeometryCollection(arrayOf(feature, feature))
+        assertEquals(
+            """{"type":"FeatureCollection","features":[{"type":"Feature","id":"123","geometry":{"type":"MultiPolygon","coordinates":[[[[1.0,1.0,1.0],[1.0,2.0,1.0],[2.0,2.0,2.0],[1.0,1.0,1.0]]],[[[1.0,1.0,1.0],[1.0,2.0,1.0],[2.0,2.0,2.0],[1.0,1.0,1.0]]]]},"properties":{"a":"1","b":2}},{"type":"Feature","id":"123","geometry":{"type":"MultiPolygon","coordinates":[[[[1.0,1.0,1.0],[1.0,2.0,1.0],[2.0,2.0,2.0],[1.0,1.0,1.0]]],[[[1.0,1.0,1.0],[1.0,2.0,1.0],[2.0,2.0,2.0],[1.0,1.0,1.0]]]]},"properties":{"a":"1","b":2}}]}""",
+            writer.write(featureCollection).toString()
+        )
+
+        // Expected result for GeometryCollection
+        val geometryCollection = factory.createGeometryCollection(arrayOf(polygon, polygon))
+        assertEquals(
+            """{"type":"GeometryCollection","geometries":[{"type":"Polygon","coordinates":[[[1.0,1.0,1.0],[1.0,2.0,1.0],[2.0,2.0,2.0],[1.0,1.0,1.0]]]},{"type":"Polygon","coordinates":[[[1.0,1.0,1.0],[1.0,2.0,1.0],[2.0,2.0,2.0],[1.0,1.0,1.0]]]}]}""",
+            writer.write(geometryCollection).toString()
+        )
+    }
+
+    @Test
+    fun `upgrades GeometryCollection to FeatureCollection if only part of the collection has feature data`() {
+        val writer = GeoJSONWriter
+        val factory = GeometryFactory()
+        val lineString = factory.createLineString(
+            arrayOf(
+                Coordinate(1.0, 1.0),
+                Coordinate(1.0, 2.0),
+                Coordinate(2.0, 2.0),
+                Coordinate(1.0, 1.0)
+            )
+        )
+        val polygon = factory.createPolygon(lineString.coordinates)
+        val feature = factory.createMultiPolygon(arrayOf(polygon, polygon))
+        feature.userData = JtsFeatureMetadata("123", mapOf("a" to "1", "b" to 2))
+        val featureCollection = factory.createGeometryCollection(arrayOf(feature, polygon))
+        assertEquals(
+            """{"type":"FeatureCollection","features":[{"type":"Feature","id":"123","geometry":{"type":"MultiPolygon","coordinates":[[[[1.0,1.0],[1.0,2.0],[2.0,2.0],[1.0,1.0]]],[[[1.0,1.0],[1.0,2.0],[2.0,2.0],[1.0,1.0]]]]},"properties":{"a":"1","b":2}},{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[1.0,1.0],[1.0,2.0],[2.0,2.0],[1.0,1.0]]]},"properties":null}]}""",
+            writer.write(featureCollection).toString()
         )
     }
 }

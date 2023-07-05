@@ -6,11 +6,12 @@ import kotlinx.serialization.Serializable
 @Serializable
 @SerialName("FeatureCollection")
 class FeatureCollection (
-    val features: List<Feature>
+    @SerialName("features")
+    private val _features: List<Feature>
 ): GeoJSON() {
     @Serializable
     sealed class Feature: GeoJSON()
 
-    @JvmName("getTypedFeatures")
-    fun getFeatures(): List<io.bouckaert.geojson.Feature> = features.filterIsInstance<io.bouckaert.geojson.Feature>()
+    @Suppress("UNCHECKED_CAST")
+    val features get() = _features as List<io.bouckaert.geojson.Feature>
 }

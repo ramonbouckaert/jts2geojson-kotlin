@@ -46,6 +46,34 @@ class GeoJsonReaderTest {
         geometry = reader.read(jsonMultiPoint, factorySrid)
         assertEquals(expectedMultiPointSrid, geometry)
         assertEquals(srid, geometry.srid)
+
+        // Expected result for Feature
+        val expectedFeature = expectedMultiPoint.copy()
+        expectedFeature.userData = JtsFeatureMetadata("123", mapOf("a" to "1", "b" to 2))
+        val expectedFeatureSrid = expectedMultiPointSrid.copy()
+        expectedFeatureSrid.userData = JtsFeatureMetadata("123", mapOf("a" to "1", "b" to 2))
+        val jsonFeature = """{"type":"Feature","id":"123","properties":{"a":"1","b":2},"geometry":{"type":"MultiPoint","coordinates":[[1.0,1.0],[1.0,2.0],[2.0,2.0],[1.0,1.0]]}}"""
+
+        geometry = reader.read(jsonFeature)
+        assertEquals(expectedFeature, geometry)
+        assertEquals(0, geometry.srid)
+
+        geometry = reader.read(jsonFeature, factorySrid)
+        assertEquals(expectedFeatureSrid, geometry)
+        assertEquals(srid, geometry.srid)
+
+        // Expected result for FeatureCollection
+        val expectedFeatureCollection = factory.createGeometryCollection(arrayOf(expectedFeature, expectedFeature))
+        val expectedFeatureCollectionSrid = factorySrid.createGeometryCollection(arrayOf(expectedFeature, expectedFeature))
+        val jsonFeatureCollection = """{"type":"FeatureCollection","features":[{"type":"Feature","id":"123","properties":{"a":"1","b":2},"geometry":{"type":"MultiPoint","coordinates":[[1.0,1.0],[1.0,2.0],[2.0,2.0],[1.0,1.0]]}},{"type":"Feature","id":"123","properties":{"a":"1","b":2},"geometry":{"type":"MultiPoint","coordinates":[[1.0,1.0],[1.0,2.0],[2.0,2.0],[1.0,1.0]]}}]}"""
+
+        geometry = reader.read(jsonFeatureCollection)
+        assertEquals(expectedFeatureCollection, geometry)
+        assertEquals(0, geometry.srid)
+
+        geometry = reader.read(jsonFeatureCollection, factorySrid)
+        assertEquals(expectedFeatureCollectionSrid, geometry)
+        assertEquals(srid, geometry.srid)
     }
 
     @Test
@@ -86,6 +114,34 @@ class GeoJsonReaderTest {
 
         geometry = reader.read(jsonMultiPoint, factorySrid)
         assertEquals(expectedMultiPointSrid, geometry)
+        assertEquals(srid, geometry.srid)
+
+        // Expected result for Feature
+        val expectedFeature = expectedMultiPoint.copy()
+        expectedFeature.userData = JtsFeatureMetadata("123", mapOf("a" to "1", "b" to 2))
+        val expectedFeatureSrid = expectedMultiPointSrid.copy()
+        expectedFeatureSrid.userData = JtsFeatureMetadata("123", mapOf("a" to "1", "b" to 2))
+        val jsonFeature = """{"type":"Feature","id":"123","properties":{"a":"1","b":2},"geometry":{"type":"MultiPoint","coordinates":[[1.0,1.0,1.0],[1.0,2.0,1.0],[2.0,2.0,2.0],[1.0,1.0,1.0]]}}"""
+
+        geometry = reader.read(jsonFeature)
+        assertEquals(expectedFeature, geometry)
+        assertEquals(0, geometry.srid)
+
+        geometry = reader.read(jsonFeature, factorySrid)
+        assertEquals(expectedFeatureSrid, geometry)
+        assertEquals(srid, geometry.srid)
+
+        // Expected result for FeatureCollection
+        val expectedFeatureCollection = factory.createGeometryCollection(arrayOf(expectedFeature, expectedFeature))
+        val expectedFeatureCollectionSrid = factorySrid.createGeometryCollection(arrayOf(expectedFeature, expectedFeature))
+        val jsonFeatureCollection = """{"type":"FeatureCollection","features":[{"type":"Feature","id":"123","properties":{"a":"1","b":2},"geometry":{"type":"MultiPoint","coordinates":[[1.0,1.0,1.0],[1.0,2.0,1.0],[2.0,2.0,2.0],[1.0,1.0,1.0]]}},{"type":"Feature","id":"123","properties":{"a":"1","b":2},"geometry":{"type":"MultiPoint","coordinates":[[1.0,1.0,1.0],[1.0,2.0,1.0],[2.0,2.0,2.0],[1.0,1.0,1.0]]}}]}"""
+
+        geometry = reader.read(jsonFeatureCollection)
+        assertEquals(expectedFeatureCollection, geometry)
+        assertEquals(0, geometry.srid)
+
+        geometry = reader.read(jsonFeatureCollection, factorySrid)
+        assertEquals(expectedFeatureCollectionSrid, geometry)
         assertEquals(srid, geometry.srid)
     }
 }

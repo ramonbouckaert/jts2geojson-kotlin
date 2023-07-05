@@ -1,6 +1,7 @@
 package io.bouckaert.jts2geojson
 
 import io.bouckaert.geojson.*
+import kotlinx.serialization.json.contentOrNull
 import org.locationtech.jts.geom.Coordinate
 import org.locationtech.jts.geom.Geometry
 import org.locationtech.jts.geom.GeometryFactory
@@ -23,8 +24,21 @@ object GeoJSONReader {
             is MultiLineString -> convert(geoJSON, factory)
             is MultiPolygon -> convert(geoJSON, factory)
             is GeometryCollection -> convert(geoJSON, factory)
-            else -> throw UnsupportedOperationException()
+            is Feature -> convert(geoJSON, factory)
+            is FeatureCollection -> convert(geoJSON, factory)
         }
+    }
+
+    private fun convert(featureCollection: FeatureCollection, factory: GeometryFactory): Geometry =
+        factory.createGeometryCollection(
+            featureCollection.features.map { convert(it, factory) }.toTypedArray()
+        )
+
+    private fun convert(feature: Feature, factory: GeometryFactory): Geometry {
+        val geom = feature.geometry
+            ?.let { this.read(it, factory) } ?: factory.createEmpty(-1)
+        geom.userData = JtsFeatureMetadata(feature.id?.contentOrNull, feature.properties)
+        return geom
     }
 
     private fun convert(point: Point, factory: GeometryFactory): Geometry =

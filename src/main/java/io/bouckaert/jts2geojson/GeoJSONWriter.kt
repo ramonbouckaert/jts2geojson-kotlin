@@ -18,10 +18,16 @@ object GeoJSONWriter {
             org.locationtech.jts.geom.GeometryCollection::class.java -> convert(geometry as org.locationtech.jts.geom.GeometryCollection)
             else -> throw UnsupportedOperationException()
         }
-        return result
+        return if (geometry.userData is JtsFeatureMetadata) {
+            wrapFeature(result, geometry.userData as JtsFeatureMetadata)
+        } else result
     }
 
-    fun write(features: List<Feature>): FeatureCollection = FeatureCollection(features)
+    private fun wrapFeature(geoJSON: GeoJSON, metadata: JtsFeatureMetadata): Feature = when(geoJSON) {
+        is Geometry -> Feature(metadata.id, geoJSON, metadata.properties)
+        is Feature -> geoJSON
+        is FeatureCollection -> throw UnsupportedOperationException("Cannot wrap a FeatureCollection with a Feature")
+    }
 
     private fun convert(point: org.locationtech.jts.geom.Point): GeoJSON = Point(convert(point.coordinate))
 
@@ -58,8 +64,17 @@ object GeoJSONWriter {
     private fun convert(gc: org.locationtech.jts.geom.GeometryCollection): GeoJSON {
         val size = gc.numGeometries
         val geometries: MutableList<Geometry> = mutableListOf()
-        for (i in 0 until size) geometries.add(write(gc.getGeometryN(i)) as Geometry)
-        return GeometryCollection(geometries)
+        val features: MutableList<Feature> = mutableListOf()
+        for (i in 0 until size) {
+            when (val geom = write(gc.getGeometryN(i))) {
+                is Feature -> features.add(geom)
+                is FeatureCollection -> features.addAll(geom.features)
+                is Geometry -> geometries.add(geom)
+            }
+        }
+        return if (features.isNotEmpty()) {
+            FeatureCollection(features.plus(geometries.map { wrapFeature(it, JtsFeatureMetadata(null, null)) }))
+        } else GeometryCollection(geometries)
     }
 
     private fun convert(coordinate: Coordinate): DoubleArray {

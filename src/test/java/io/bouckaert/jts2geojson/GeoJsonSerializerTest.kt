@@ -20,9 +20,9 @@ class GeoJsonSerializerTest {
     fun `parsing GeoJSON to object`() {
         val geometry = Point(doubleArrayOf(1.0, 1.0))
         val properties = mapOf("test" to 1 as Any)
-        val feature = Feature(geometry, properties)
 
         // Be identical to programmatically created Feature
+        val feature = Feature(geometry, properties)
         val expected1 = """{"type":"Feature","geometry":{"type":"Point","coordinates":[1.0,1.0]},"properties":{"test":1}}"""
 
         val json1 = feature.toString()
@@ -51,15 +51,25 @@ class GeoJsonSerializerTest {
         val geoJson3 = GeoJSON.create(json3)
         assertEquals(expected3, geoJson3.toString())
 
-        // Be identical to programmatically created FeatureCollection
-        val featureCollection = FeatureCollection(listOf(feature, feature))
-        val expected4 = """{"type":"FeatureCollection","features":[{"type":"Feature","geometry":{"type":"Point","coordinates":[1.0,1.0]},"properties":{"test":1}},{"type":"Feature","geometry":{"type":"Point","coordinates":[1.0,1.0]},"properties":{"test":1}}]}"""
+        // Be identical to programmatically created feature without properties
+        val featureWithoutProperties = Feature(geometry, null)
+        val expected4 = """{"type":"Feature","geometry":{"type":"Point","coordinates":[1.0,1.0]},"properties":null}"""
 
-        val json4 = featureCollection.toString()
+        val json4 = featureWithoutProperties.toString()
         assertEquals(expected4, json4)
 
         val geoJson4 = GeoJSON.create(json4)
         assertEquals(expected4, geoJson4.toString())
+
+        // Be identical to programmatically created FeatureCollection
+        val featureCollection = FeatureCollection(listOf(feature, feature))
+        val expected5 = """{"type":"FeatureCollection","features":[{"type":"Feature","geometry":{"type":"Point","coordinates":[1.0,1.0]},"properties":{"test":1}},{"type":"Feature","geometry":{"type":"Point","coordinates":[1.0,1.0]},"properties":{"test":1}}]}"""
+
+        val json5 = featureCollection.toString()
+        assertEquals(expected5, json5)
+
+        val geoJson5 = GeoJSON.create(json5)
+        assertEquals(expected5, geoJson5.toString())
     }
 
     @Test
@@ -69,7 +79,7 @@ class GeoJsonSerializerTest {
         var json = GeoJSON.create(geoJSON)
         assertTrue(json is FeatureCollection)
         assert(json.features.isNotEmpty())
-        var f = json.getFeatures().first()
+        var f = json.features.first()
         assertNotNull(f.geometry)
         assertTrue(f.geometry is Point)
         val point = f.geometry as Point
@@ -81,7 +91,7 @@ class GeoJsonSerializerTest {
         json = GeoJSON.create(geoJSON)
         assertTrue(json is FeatureCollection)
         assert(json.features.isNotEmpty())
-        f = json.getFeatures().first()
+        f = json.features.first()
         assertNotNull(f.geometry)
         assertTrue(f.geometry is MultiPoint)
         val multiPoint = f.geometry as MultiPoint
@@ -93,7 +103,7 @@ class GeoJsonSerializerTest {
         json = GeoJSON.create(geoJSON)
         assertTrue(json is FeatureCollection)
         assert(json.features.isNotEmpty())
-        f = json.getFeatures().first()
+        f = json.features.first()
         assertNotNull(f.geometry)
         assertTrue(f.geometry is LineString)
         val lineString = f.geometry as LineString
@@ -105,7 +115,7 @@ class GeoJsonSerializerTest {
         json = GeoJSON.create(geoJSON)
         assertTrue(json is FeatureCollection)
         assert(json.features.isNotEmpty())
-        f = json.getFeatures().first()
+        f = json.features.first()
         assertNotNull(f.geometry)
         assertTrue(f.geometry is MultiLineString)
         val multiLineString = f.geometry as MultiLineString
@@ -117,7 +127,7 @@ class GeoJsonSerializerTest {
         json = GeoJSON.create(geoJSON)
         assertTrue(json is FeatureCollection)
         assert(json.features.isNotEmpty())
-        f = json.getFeatures().first()
+        f = json.features.first()
         assertNotNull(f.geometry)
         assertTrue(f.geometry is Polygon)
         val polygon = f.geometry as Polygon
@@ -129,7 +139,7 @@ class GeoJsonSerializerTest {
         json = GeoJSON.create(geoJSON)
         assertTrue(json is FeatureCollection)
         assert(json.features.isNotEmpty())
-        f = json.getFeatures().first()
+        f = json.features.first()
         assertNotNull(f.geometry)
         assertTrue(f.geometry is MultiPolygon)
         val multiPolygon = f.geometry as MultiPolygon
