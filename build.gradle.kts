@@ -21,7 +21,7 @@ dependencies {
 }
 
 group = "io.bouckaert"
-version = "0.21.0"
+version = "0.22.0-SNAPSHOT"
 description = "jts2geojson-kotlin"
 
 kotlin {
