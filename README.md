@@ -11,7 +11,7 @@ Maven:
     <dependency>
         <groupId>io.bouckaert</groupId>
         <artifactId>jts2geojson-kotlin</artifactId>
-        <version>0.20.0</version>
+        <version>0.21.0</version>
     </dependency>
 </dependencies>
 
@@ -37,7 +37,7 @@ Maven:
 Gradle KTS:
 ```kotlin
 dependencies {
-    implementation("io.bouckaert:jts2geojson-kotlin:0.20.0")
+    implementation("io.bouckaert:jts2geojson-kotlin:0.21.0")
 }
 
 repositories {
