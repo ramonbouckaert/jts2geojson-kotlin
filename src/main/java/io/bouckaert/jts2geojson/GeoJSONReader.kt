@@ -6,6 +6,7 @@ import org.locationtech.jts.geom.Coordinate
 import org.locationtech.jts.geom.Geometry
 import org.locationtech.jts.geom.GeometryFactory
 import org.locationtech.jts.geom.PrecisionModel
+import java.io.InputStream
 
 object GeoJSONReader {
     @JvmOverloads
@@ -27,6 +28,11 @@ object GeoJSONReader {
             is Feature -> convert(geoJSON, factory)
             is FeatureCollection -> convert(geoJSON, factory)
         }
+    }
+
+    @JvmOverloads
+    fun read(inputStream: InputStream, geomFactory: GeometryFactory? = null): Geometry {
+        return read(GeoJSON.create(inputStream), geomFactory)
     }
 
     private fun convert(featureCollection: FeatureCollection, factory: GeometryFactory): Geometry =

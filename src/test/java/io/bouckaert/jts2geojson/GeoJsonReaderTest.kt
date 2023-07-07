@@ -4,16 +4,17 @@ import org.junit.Test
 import org.locationtech.jts.geom.Coordinate
 import org.locationtech.jts.geom.GeometryFactory
 import org.locationtech.jts.geom.PrecisionModel
+import java.io.ByteArrayInputStream
 import kotlin.test.assertEquals
 
 class GeoJsonReaderTest {
+
+    private val factory = GeometryFactory()
+    private val srid = 25832
+    private val factorySrid = GeometryFactory(PrecisionModel(), srid)
+    private val reader = GeoJSONReader
     @Test
     fun `reading JTS object from GeoJSON`() {
-        val reader = GeoJSONReader
-        val factory = GeometryFactory()
-        val srid = 25832
-        val factorySrid = GeometryFactory(PrecisionModel(), srid)
-
         val coordArray = arrayOf(
             Coordinate(1.0, 1.0),
             Coordinate(1.0, 2.0),
@@ -78,11 +79,6 @@ class GeoJsonReaderTest {
 
     @Test
     fun `reading XYZ JTS object from GeoJSON`() {
-        val reader = GeoJSONReader
-        val factory = GeometryFactory()
-        val srid = 25832
-        val factorySrid = GeometryFactory(PrecisionModel(), srid)
-
         val coordArray = arrayOf(
             Coordinate(1.0, 1.0, 1.0),
             Coordinate(1.0, 2.0, 1.0),
@@ -143,5 +139,15 @@ class GeoJsonReaderTest {
         geometry = reader.read(jsonFeatureCollection, factorySrid)
         assertEquals(expectedFeatureCollectionSrid, geometry)
         assertEquals(srid, geometry.srid)
+    }
+
+    @Test
+    fun `reads from InputStream`() {
+        val expected = factory.createPoint(Coordinate(1.0, 1.0))
+        val inputStream = ByteArrayInputStream("""{"type":"Point","coordinates":[1.0,1.0]}""".toByteArray())
+
+        val geometry = reader.read(inputStream)
+
+        assertEquals(expected, geometry)
     }
 }

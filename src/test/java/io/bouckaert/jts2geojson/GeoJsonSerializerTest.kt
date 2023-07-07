@@ -2,6 +2,7 @@ package io.bouckaert.jts2geojson
 
 import io.bouckaert.geojson.*
 import org.junit.Test
+import java.io.ByteArrayOutputStream
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
@@ -191,5 +192,18 @@ class GeoJsonSerializerTest {
 
         val geoJson4 = GeoJSON.create(json4)
         assertEquals(expected4, geoJson4.toString())
+    }
+
+    @Test
+    fun `writes to OutputStream`() {
+        val geometry = Point(doubleArrayOf(1.0, 1.0))
+        val properties = mapOf("test" to 1)
+        val feature = Feature(geometry, properties)
+        val expected = """{"type":"Feature","geometry":{"type":"Point","coordinates":[1.0,1.0]},"properties":{"test":1}}"""
+
+        val bos = ByteArrayOutputStream()
+        feature.writeTo(bos)
+
+        assertEquals(expected, bos.toString("UTF-8"))
     }
 }
